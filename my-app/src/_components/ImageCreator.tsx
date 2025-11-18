@@ -8,6 +8,11 @@ export default function ImageCreator() {
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const refreshForm = () => {
+    setPrompt("");
+    setImageUrl("");
+  };
+
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
@@ -43,7 +48,7 @@ export default function ImageCreator() {
             Food image creator
           </span>
         </div>
-        <Button variant="outline">
+        <Button variant="outline" onClick={refreshForm} type="button">
           <Image src={"reload.svg"} height={16} width={16} alt="" />
         </Button>
       </div>

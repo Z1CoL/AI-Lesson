@@ -4,8 +4,8 @@ import Image from "next/image";
 
 export default function ImageAnalysis() {
   return (
-    <div className="w-[580px]">
-      <div className="w-3/4">
+    <div className="min-w-[580px]">
+      <div className="w-[580px]">
         <div className="flex justify-between w-full">
           <div className="flex gap-3">
             <Image src={"Article.svg"} height={26} width={26} alt="" />

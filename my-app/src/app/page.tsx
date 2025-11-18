@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ImageAnalysis from "@/_components/ImageAnalysis";
-import IngredientRecognition from "@/_components/IngredientRecognition";
+
 import ImageCreator from "@/_components/ImageCreator";
+import { IngredientRecognition } from "@/_components/IngredientRecognition";
 
 export default function Home() {
   const [active, setActive] = useState("analysis");

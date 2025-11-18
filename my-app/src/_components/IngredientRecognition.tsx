@@ -50,103 +50,115 @@
 //     </div>
 //   );
 // }
-
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import React, { useState } from "react";
+import { RxReload } from "react-icons/rx";
 
-export default function IngredientRecognition() {
-  const [text, setText] = useState("");
-  const [result, setResult] = useState("");
+export const IngredientRecognition = () => {
   const [loading, setLoading] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [ingredient, setIngredient] = useState("");
 
-  const handleGenerate = async () => {
-    if (!text.trim() || loading) return;
-
+  const generateTextToText = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
-    setResult("");
+    setIngredient("");
 
     try {
-      const res = await fetch("/api/ingredients", {
+      const response = await fetch("/api/ingredients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ prompt }),
       });
 
-      if (!res.ok) throw new Error("Request failed");
+      const data = await response.json();
 
-      const data = await res.json();
-
-      setResult(
-        data.ingredients?.length
-          ? data.ingredients.join(", ")
-          : "No ingredients detected"
-      );
-    } catch (e) {
-      setResult("Error processing the text.");
+      if (data.text) {
+        setIngredient(data.text);
+      } else {
+        console.error("Failed to generate text to text");
+      }
+    } catch (error) {
+      console.error("Error", error);
+      alert("Failed to generate text to text");
     } finally {
       setLoading(false);
     }
   };
 
+  const refreshForm = () => {
+    setPrompt("");
+    setIngredient("");
+  };
+
   return (
-    <div className="w-[580px]">
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex gap-3 items-center">
-          <Image src="/Article.svg" height={26} width={26} alt="" />
-          <span className="font-semibold text-2xl">Ingredient Recognition</span>
+    <Tabs defaultValue="ingredient-recognition" className="w-[580px]">
+      <TabsList>
+        <TabsTrigger value="ingredient-recognition">
+          Ingredient Recognition
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="ingredient-recognition">
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between">
+              <div className="text-xl leading-7 font-semibold text-foreground">
+                Ingredient recognition
+              </div>
+              <Button
+                onClick={refreshForm}
+                type="button"
+                variant="outline"
+                className="w-12 h-10"
+              >
+                <RxReload size={16} />
+              </Button>
+            </div>
+
+            <div className="text-sm leading-5 text-muted-foreground">
+              What image do you want? Describe it briefly.
+            </div>
+
+            <form
+              onSubmit={generateTextToText}
+              className="w-full flex flex-col gap-2"
+            >
+              <Textarea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Enter your prompt..."
+                className="w-full px-3 py-2 border border-input rounded-md text-sm leading-5 text-primary"
+              />
+
+              <Button
+                type="submit"
+                disabled={loading || !prompt}
+                className="w-full"
+              >
+                {loading ? "Generating ..." : "Generate Image"}
+              </Button>
+            </form>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="text-xl leading-7 font-semibold text-foreground">
+              Identified Ingredients
+            </div>
+            {ingredient ? (
+              <div>{ingredient}</div>
+            ) : (
+              <div className="text-sm leading-6 text-muted-foreground">
+                First, enter your text to recognize an ingredient.
+              </div>
+            )}
+          </div>
         </div>
-
-        <Button
-          variant="outline"
-          onClick={() => {
-            setText("");
-            setResult("");
-          }}
-          className="p-2"
-        >
-          <Image src="/reload.svg" height={16} width={16} alt="reload" />
-        </Button>
-      </div>
-
-      {/* DESCRIPTION */}
-      <p className="text-gray-500 mb-2">
-        Describe the food, and AI will detect the ingredients.
-      </p>
-
-      {/* INPUT BOX */}
-      <textarea
-        className="border border-gray-300 rounded-md px-3 py-2 w-full h-[130px] resize-none focus:outline-none focus:ring-2 focus:ring-black/20"
-        placeholder="Write food description here..."
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
-
-      {/* GENERATE BUTTON */}
-      <Button
-        onClick={handleGenerate}
-        disabled={!text.trim() || loading}
-        className="mt-3 ml-auto block bg-black text-white disabled:opacity-30"
-      >
-        {loading ? "Processing..." : "Generate"}
-      </Button>
-
-      {/* RESULTS */}
-      <div className="mt-10">
-        <div className="flex gap-2 items-center mb-2">
-          <Image src="/Vector.svg" height={24} width={24} alt="icon" />
-          <span className="font-semibold text-[20px]">
-            Identified Ingredients
-          </span>
-        </div>
-
-        <div className="text-gray-700">
-          {result ? result : "First, enter your text to recognize ingredients."}
-        </div>
-      </div>
-    </div>
+      </TabsContent>
+    </Tabs>
   );
-}
+};

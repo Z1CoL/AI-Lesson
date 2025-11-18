@@ -1,18 +1,32 @@
-import { NextRequest } from "next/server";
 import { InferenceClient } from "@huggingface/inference";
+import { NextRequest, NextResponse } from "next/server";
 
-const HF_TOKEN = process.env.HF_TOKEN;
-const inference = new InferenceClient(HF_TOKEN);
+const hf = new InferenceClient(process.env.HF_TOKEN);
 
-export const POST = async (request: NextRequest) => {
-  const { text } = await request.json();
+export async function POST(req: NextRequest) {
+  try {
+    const { prompt } = await req.json();
 
-  const response = await inference.textClassification({
-    model: "microsoft/phi-3-mini-128k-instruct",
-    inputs: `Extract ingredients from the following text: ${text}`,
-  });
+    if (!prompt) {
+      return NextResponse.json(
+        { error: "Prompt is required" },
+        { status: 400 }
+      );
+    }
 
-  return Response.json({
-    ingredients: response,
-  });
-};
+    const response = await hf.chatCompletion({
+      model: "meta-llama/Llama-3.2-3B-Instruct",
+      messages: [{ role: "user", content: `Extract from: ${prompt}` }],
+    });
+
+    const generatedText = response.choices?.[0]?.message?.content || "";
+
+    return NextResponse.json({ text: generatedText.trim() });
+  } catch (error) {
+    console.error("Error generating text:", error);
+    return NextResponse.json(
+      { error: "Failed to generate text" },
+      { status: 500 }
+    );
+  }
+}
