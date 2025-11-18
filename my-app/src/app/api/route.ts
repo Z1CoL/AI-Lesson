@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectDB from "../lib/utils/mongodb";
 import User from "../lib/models/models";
+import { InferenceClient } from "@huggingface/inference";
 
 export async function GET() {
   await connectDB();
@@ -12,7 +13,7 @@ export async function GET() {
   return NextResponse.json({ data: allUsers });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   await connectDB();
 
   const body = await request.json();
