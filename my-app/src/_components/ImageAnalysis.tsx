@@ -40,7 +40,7 @@ export default function ImageAnalysis() {
       {/* SUMMARY */}
       <div className="w-full mt-10">
         <div className="flex gap-2">
-          <Image src={"articleSummary.svg"} height={24} width={24} alt="" />
+          <Image src={"/articleSummary.svg"} height={24} width={24} alt="" />
           <span className="font-semibold text-[20px] ">
             Here is the Summary
           </span>
