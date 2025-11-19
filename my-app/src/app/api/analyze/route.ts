@@ -1,48 +1,32 @@
-import { InferenceClient } from "@huggingface/inference";
 import { NextRequest, NextResponse } from "next/server";
+import { InferenceClient } from "@huggingface/inference";
 
-const hf = new InferenceClient(process.env.HF_TOKEN);
+const HF_TOKEN = process.env.HF_TOKEN!;
+const inference = new InferenceClient(HF_TOKEN);
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const prompt = formData.get("prompt") as File;
 
-    if (!prompt) {
-      return NextResponse.json(
-        { error: "Prompt is required" },
-        { status: 400 }
-      );
+    console.log("FORMDATA >>", formData);
+    console.log("IMAGE >>", formData.get("image"));
+
+    const image = formData.get("image") as File;
+
+    if (!image) {
+      return NextResponse.json({ error: "No image provided" }, { status: 400 });
     }
 
-    let imageUrl = "";
-    if (prompt) {
-    }
-
-    const response = await hf.chatCompletion({
-      provider: "nebius",
-      model: "google/gemma-3-27b-it",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "explan this photo.",
-            },
-            { type: "image_url", image_url: { url: imageUrl } },
-          ],
-        },
-      ],
+    const results = await inference.objectDetection({
+      model: "facebook/detr-resnet-50",
+      data: image,
     });
 
-    const generatedText = response.choices[0]?.message?.content || "";
-
-    return NextResponse.json({ text: generatedText.trim() });
-  } catch (error) {
-    console.error("Error generating text:", error);
+    return NextResponse.json({ objects: results });
+  } catch (err) {
+    console.error("ERROR >>", err);
     return NextResponse.json(
-      { error: "Failed to generate text" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
