@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -41,50 +42,55 @@ export default function ImageCreator() {
 
   return (
     <div className="w-[580px]">
-      <div className="flex justify-between w-full">
+      <div className="flex justify-between">
         <div className="flex gap-3">
-          <Image src={"Article.svg"} height={26} width={26} alt="" />
-          <span className="size-xl font-semibold text-2xl">
-            Food image creator
+          <Image src={"/Article.svg"} height={26} width={26} alt="icon" />
+          <span className="text-2xl font-semibold">
+            Food Image Creator
           </span>
         </div>
-        <Button variant="outline" onClick={refreshForm} type="button">
-          <Image src={"reload.svg"} height={16} width={16} alt="" />
+        <Button variant="outline" onClick={refreshForm}>
+          <Image src={"/reload.svg"} height={16} width={16} alt="reload" />
         </Button>
       </div>
 
-      <span className="text-gray-400">
+      <p className="text-gray-400 mt-2">
         What food image do you want? Describe it briefly.
-      </span>
+      </p>
 
-      <input
-        className="border border-gray-300 rounded-md mt-4 px-3 py-2 w-full h-[130px]"
-        placeholder="image prompt"
+      <textarea
+        className="border rounded-md mt-4 px-3 py-2 w-full h-[130px]"
+        placeholder="Image prompt..."
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
       />
 
       <button
         onClick={handleGenerate}
-        className="mt-3 ml-[490px] p-3 bg-black text-white rounded-md opacity-20 "
+        disabled={loading || !prompt.trim()}
+        className="mt-3 w-full p-3 bg-black text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Generate
+        {loading ? "Generating..." : "Generate"}
       </button>
 
-      <div className="flex gap-2">
-        <Image src={"/Vector.svg"} height={24} width={24} alt="" />
-        <span className="font-semibold text-[20px] ">Result</span>
-      </div>
-
-      {imageUrl ? (
-        <div className="mt-2">
-          <img src={imageUrl} alt="Generated" className="w-full rounded-md" />
+      <div className="mt-6">
+        <div className="flex gap-2 items-center">
+          <Image src={"/Vector.svg"} height={24} width={24} alt="result" />
+          <span className="font-semibold text-xl">Result</span>
         </div>
-      ) : (
-        <p className="mt-2 text-gray-500">
-          First, enter your text to generate an image.
-        </p>
-      )}
+
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt="Generated food"
+            className="w-full rounded-md mt-2"
+          />
+        ) : (
+          <p className="mt-2 text-gray-500">
+            First, enter your text to generate an image.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,22 +1,33 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useState } from "react";
 
+type DetectedObject = {
+  label: string;
+  score: number;
+};
+
+type AnalyzeResponse = {
+  objects?: DetectedObject[];
+  error?: string;
+};
+
 export default function ImageAnalysis() {
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
-  const [detectedObjects, setDetectedObjects] = useState<any[]>([]);
+  const [detectedObjects, setDetectedObjects] = useState<DetectedObject[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [summaryText, setSummaryText] = useState(
-    "First, enter your image to recognize an ingredients."
+    "First, upload your image to recognize ingredients.",
   );
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setUploadedImage(file);
-      const url = URL.createObjectURL(file);
-      setUploadedImageUrl(url);
+      setUploadedImageUrl(URL.createObjectURL(file));
       setDetectedObjects([]);
       setSummaryText("Image uploaded. Click Generate to analyze.");
     }
@@ -38,25 +49,24 @@ export default function ImageAnalysis() {
         body: formData,
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as AnalyzeResponse;
 
       if (response.ok) {
-        const objects = data.objects || [];
+        const objects = data.objects ?? [];
         setDetectedObjects(objects);
 
         if (objects.length === 0) {
-          setSummaryText("No ingredients detected. Try another image.");
+          setSummaryText("No ingredients detected.");
         } else {
-          const labels = objects.map((obj: any) => obj.label).join(", ");
-          setSummaryText(`Detected ingredients: ${labels}.`);
+          const labels = objects.map((obj) => obj.label).join(", ");
+          setSummaryText(`Detected ingredients: ${labels}`);
         }
       } else {
-        console.error("Failed:", data);
-        setSummaryText("Failed to analyze the image.");
+        setSummaryText(data.error ?? "Failed to analyze image.");
       }
     } catch (err) {
       console.error(err);
-      setSummaryText("An error occurred while analyzing.");
+      setSummaryText("An error occurred.");
     } finally {
       setAnalyzing(false);
     }
@@ -64,66 +74,51 @@ export default function ImageAnalysis() {
 
   return (
     <div className="w-[580px]">
-      <div className="flex justify-between w-full">
+      <div className="flex justify-between">
         <div className="flex gap-3">
-          <Image src={"Article.svg"} height={26} width={26} alt="" />
-          <span className="size-xl font-semibold text-2xl">Image analysis</span>
-        </div>
-        <Button variant="outline">
-          <Image src={"reload.svg"} height={16} width={16} alt="" />
-        </Button>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <label className="block mb-2 text-sm font-medium mt-4">
-            Upload a food photo, and AI will detect the ingredients
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="w-full px-4 py-3 border rounded-lg"
-          />
-        </div>
-
-        <div className="flex w-full items-end">
-          <button
-            onClick={analyzeImage}
-            disabled={analyzing || !uploadedImage}
-            className=" mt-3 ml-[490px] p-3 bg-black opacity-40 rounded-[5px] text-white"
-          >
-            Generate
-          </button>
+          <Image src={"/Article.svg"} height={26} width={26} alt="icon" />
+          <span className="text-2xl font-semibold">Image Analysis</span>
         </div>
       </div>
 
-      {/* SUMMARY */}
-      <div className="w-full mt-10">
-        <div className="flex gap-2">
-          <Image src={"/articleSummary.svg"} height={24} width={24} alt="" />
-          <span className="font-semibold text-[20px]">Here is the Summary</span>
-        </div>
+      <div className="mt-4">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="w-full px-4 py-3 border rounded-lg"
+        />
 
-        <span className="opacity-50">{summaryText}</span>
+        <button
+          onClick={analyzeImage}
+          disabled={analyzing || !uploadedImage}
+          className="mt-3 w-full p-3 bg-black text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {analyzing ? "Analyzing..." : "Generate"}
+        </button>
+      </div>
+
+      <div className="mt-6">
+        <span className="font-semibold text-xl">Summary</span>
+        <p className="opacity-70 mt-2">{summaryText}</p>
       </div>
 
       {uploadedImageUrl && (
-        <div className="border rounded-lg p-4">
-          <img src={uploadedImageUrl} className="w-full rounded-lg mb-4" />
+        <div className="border rounded-lg p-4 mt-4">
+          <img
+            src={uploadedImageUrl}
+            alt="Uploaded food"
+            className="w-full rounded-lg mb-4"
+          />
 
           {detectedObjects.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-lg">Detected Objects:</h3>
-              <ul className="space-y-1">
-                {detectedObjects.map((obj, index) => (
-                  <li key={index} className="text-sm">
-                    <span className="font-medium">{obj.label}</span> (
-                    {(obj.score * 100).toFixed(1)}%)
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <ul className="space-y-1">
+              {detectedObjects.map((obj, index) => (
+                <li key={index}>
+                  {obj.label} ({(obj.score * 100).toFixed(1)}%)
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       )}
